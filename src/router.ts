@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import GettingStarted from './examples/00-GettingStarted.vue'
 import ContactForm from './examples/01-ContactForm.vue'
 import RegistrationForm from './examples/02-RegistrationForm.vue'
 import DynamicItemsForm from './examples/03-DynamicItemsForm.vue'
@@ -10,7 +11,8 @@ import CustomValidation from './examples/07-CustomValidation.vue'
 const router = createRouter({
   history: createWebHashHistory(),
   routes: [
-    { path: '/', redirect: '/examples/contact' },
+    { path: '/', redirect: '/getting-started' },
+    { path: '/getting-started', component: GettingStarted },
     { path: '/examples/contact', component: ContactForm },
     { path: '/examples/registration', component: RegistrationForm },
     { path: '/examples/dynamic', component: DynamicItemsForm },

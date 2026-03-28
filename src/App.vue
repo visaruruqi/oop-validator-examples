@@ -3,10 +3,11 @@
     <nav class="sidebar">
       <div class="sidebar-header">
         <span class="sidebar-title">oop-validator</span>
-        <span class="sidebar-subtitle">v0.6.0 · Vue directives</span>
+        <span class="sidebar-subtitle">v1.0.0 · Vue directives</span>
       </div>
       <ul class="nav-list">
-        <li class="nav-section-label">Examples</li>
+        <li><RouterLink to="/getting-started">Getting Started</RouterLink></li>
+        <li class="nav-section-label nav-section-label--top">Examples</li>
         <li><RouterLink to="/examples/contact">01 · Contact Form</RouterLink></li>
         <li><RouterLink to="/examples/registration">02 · Registration</RouterLink></li>
         <li><RouterLink to="/examples/dynamic">03 · Dynamic Items</RouterLink></li>
