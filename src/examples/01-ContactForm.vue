@@ -5,7 +5,7 @@
   >
     <div v-if="submitted" class="success-banner">
       Message sent! Thanks for reaching out.
-      <button class="btn btn-sm" @click="submitted = false; $reset()">Send another</button>
+      <button type="button" class="btn btn-sm" @click="submitted = false; $reset()">Send another</button>
     </div>
 
     <form v-else name="contact" v-submit="handleSubmit">

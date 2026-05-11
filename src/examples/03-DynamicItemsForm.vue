@@ -168,7 +168,7 @@
 
       <div class="form-actions">
         <button type="submit" class="btn btn-primary">Place Order</button>
-        <button type="button" class="btn btn-secondary" @click="$reset(); items.splice(1); cleanupExtraItems()">Reset</button>
+        <button type="button" class="btn btn-secondary" @click="resetForm">Reset</button>
       </div>
 
       <div v-if="$submitted && $invalid" class="form-error-summary">
@@ -231,6 +231,12 @@ function cleanupExtraItems() {
       delete formData[key]
     }
   }
+}
+
+function resetForm() {
+  form.$reset()
+  items.value.splice(1)
+  cleanupExtraItems()
 }
 
 const $reset = () => form.$reset()

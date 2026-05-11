@@ -300,19 +300,33 @@ form.v-form-submitted.v-form-invalid .error-summary { display: block; }
 
 ## 11. Async validation
 
-Pass an `asyncValidators` option to `useForm`. Validators are debounced and
-cancellable — `$pending` is `true` while they run.
+Pass an `asyncValidators` option to `useForm`. The shape is
+`{ [fieldName]: { [ruleKey]: (value) => Promise<boolean> } }` — return `true`
+for valid, `false` for invalid. Validators are internally debounced and
+cancelled when a newer call supersedes them; `$pending` is `true` while
+they run.
 
 ```ts
 const form = useForm('register', data, {
   asyncValidators: {
-    email: async (value, signal) => {
-      const res = await fetch(`/api/check-email?email=${value}`, { signal })
-      const { taken } = await res.json()
-      return taken ? 'Email is already registered.' : null
+    email: {
+      uniqueEmail: async (value) => {
+        const res = await fetch(`/api/check-email?email=${value}`)
+        const { taken } = await res.json()
+        return !taken   // true = valid, false = invalid
+      }
     }
-  }
+  },
+  debounce: 500,
 })
+```
+
+The `ruleKey` you choose (`uniqueEmail` above) is what you reference in `v-message`:
+
+```html
+<div v-messages="form.email?.$error ?? {}">
+  <span v-message="'uniqueEmail'">This email is already taken.</span>
+</div>
 ```
 
 ```html
@@ -350,6 +364,7 @@ Implement `IValidationRule` for any business-specific logic:
 import type { IValidationRule } from 'oop-validator'
 
 class HexColorRule implements IValidationRule {
+  ruleKey = 'hexcolor'                       // required since v1.1.0
   private msg = 'Must be a valid hex colour (e.g. #FF5733).'
 
   isValid(value: any): [boolean, string] {
@@ -370,6 +385,7 @@ For rules that need to read another field (e.g. password confirm), implement `se
 
 ```ts
 class MustMatchRule implements IValidationRule {
+  ruleKey = 'mustmatch'
   private context: Record<string, any> = {}
   private targetField = ''
 

@@ -40,7 +40,7 @@
         </div>
 
         <button type="submit" class="btn">Submit</button>
-        <p v-if="colorSubmitted && colorForm.$valid?.value" class="success-msg">Valid colour!</p>
+        <p v-if="colorSubmitted && colorForm.$valid" class="success-msg">Valid colour!</p>
       </form>
 
       <div class="code-block">
@@ -86,7 +86,7 @@
         </div>
 
         <button type="submit" class="btn">Submit</button>
-        <p v-if="slugSubmitted && slugForm.$valid?.value" class="success-msg">Valid slug!</p>
+        <p v-if="slugSubmitted && slugForm.$valid" class="success-msg">Valid slug!</p>
       </form>
 
       <div class="code-block">
@@ -140,7 +140,7 @@
         </div>
 
         <button type="submit" class="btn">Submit</button>
-        <p v-if="confirmSubmitted && confirmForm.$valid?.value" class="success-msg">Passwords match!</p>
+        <p v-if="confirmSubmitted && confirmForm.$valid" class="success-msg">Passwords match!</p>
       </form>
 
       <div class="code-block">
@@ -196,7 +196,7 @@
         </div>
 
         <button type="submit" class="btn">Submit</button>
-        <p v-if="refSubmitted && refForm.$valid?.value" class="success-msg">Form is valid!</p>
+        <p v-if="refSubmitted && refForm.$valid" class="success-msg">Form is valid!</p>
       </form>
 
       <div class="code-block">
@@ -217,6 +217,7 @@ import type { IValidationRule } from 'oop-validator'
 // ─── Custom rule 1: HexColorRule ────────────────────────────────────────────
 
 class HexColorRule implements IValidationRule {
+  ruleKey = 'hexcolor'
   private msg = 'Must be a valid hex colour (e.g. #FF5733).'
 
   isValid(value: any): [boolean, string] {
@@ -232,6 +233,7 @@ class HexColorRule implements IValidationRule {
 // ─── Custom rule 2: NoSpacesRule ─────────────────────────────────────────────
 
 class NoSpacesRule implements IValidationRule {
+  ruleKey = 'nospaces'
   private msg = 'This field must not contain spaces.'
 
   isValid(value: any): [boolean, string] {
@@ -247,6 +249,7 @@ class NoSpacesRule implements IValidationRule {
 // ─── Custom rule 3: MustMatchRule ────────────────────────────────────────────
 
 class MustMatchRule implements IValidationRule {
+  ruleKey = 'mustmatch'
   private targetField = ''
   private context: Record<string, any> = {}
   private msg = 'Values do not match.'
@@ -304,6 +307,7 @@ const submitConfirm = () => { confirmSubmitted.value = true }
 // ─── Source snippets shown in the UI ─────────────────────────────────────────
 
 const hexRuleSource = `class HexColorRule implements IValidationRule {
+  ruleKey = 'hexcolor'
   private msg = 'Must be a valid hex colour (e.g. #FF5733).'
 
   isValid(value: any): [boolean, string] {
@@ -323,6 +327,7 @@ colorForm.registerRule('hex', 'required', 'required')
 colorForm.registerRule('hex', 'hexcolor', new HexColorRule())`
 
 const noSpacesSource = `class NoSpacesRule implements IValidationRule {
+  ruleKey = 'nospaces'
   private msg = 'This field must not contain spaces.'
 
   isValid(value: any): [boolean, string] {
@@ -360,6 +365,7 @@ const form = useForm('myForm', data)
 // v-model="data.name" works in both cases inside the template.`
 
 const mustMatchSource = `class MustMatchRule implements IValidationRule {
+  ruleKey = 'mustmatch'
   private targetField = ''
   private context: Record<string, any> = {}
   private msg = 'Values do not match.'

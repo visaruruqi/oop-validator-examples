@@ -8,7 +8,7 @@
       <div class="layout-form">
         <div v-if="submitted" class="success-banner">
           Submitted! Schema-driven validation passed.
-          <button class="btn btn-sm" @click="submitted = false; $reset()">Send another</button>
+          <button type="button" class="btn btn-sm" @click="submitted = false; $reset()">Send another</button>
         </div>
 
         <form v-else @submit.prevent="onSubmit" novalidate>

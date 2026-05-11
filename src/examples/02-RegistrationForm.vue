@@ -5,7 +5,7 @@
   >
     <div v-if="registered" class="success-banner">
       Account created! Welcome, {{ formData.username }}.
-      <button class="btn btn-sm" @click="registered = false; $reset()">Register another</button>
+      <button type="button" class="btn btn-sm" @click="registered = false; $reset()">Register another</button>
     </div>
 
     <form v-else name="registration" v-submit="handleSubmit">
