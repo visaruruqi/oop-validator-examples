@@ -1,13 +1,38 @@
 <template>
   <div class="docs-page">
-    <div class="docs-content" v-html="html" />
+    <div class="docs-content" v-html="html" @click="onDocClick" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { marked, Renderer } from 'marked'
 import hljs from 'highlight.js'
+import { useRouter } from 'vue-router'
 import content from '../../GETTING-STARTED.md?raw'
+
+// Map markdown links pointing at example source files → in-app routes.
+// Keeps the raw GETTING-STARTED.md readable on GitHub (where the paths
+// resolve to actual files) and clickable inside the app (where they
+// navigate via Vue Router).
+const exampleRoutes: Record<string, string> = {
+  '01-ContactForm.vue':         '/examples/contact',
+  '02-RegistrationForm.vue':    '/examples/registration',
+  '03-DynamicItemsForm.vue':    '/examples/dynamic',
+  '04-NumericValidation.vue':   '/examples/numeric',
+  '05-MessagesShowcase.vue':    '/examples/messages',
+  '06-FormStateDebugger.vue':   '/examples/debugger',
+  '07-CustomValidation.vue':    '/examples/custom',
+  '08-SchemaValidation.vue':    '/examples/schema',
+  '09-SingleFieldValidation.vue': '/examples/single-field',
+  '10-FormStateCss.vue':        '/examples/form-state-css',
+}
+
+function rewriteHref(href: string): string {
+  const match = /^src\/examples\/(.+\.vue)$/.exec(href)
+  if (!match) return href
+  const route = exampleRoutes[match[1]]
+  return route ? `#${route}` : href
+}
 
 const renderer = new Renderer()
 renderer.code = ({ text, lang }) => {
@@ -15,10 +40,29 @@ renderer.code = ({ text, lang }) => {
   const highlighted = hljs.highlight(text, { language }).value
   return `<pre><code class="hljs language-${language}">${highlighted}</code></pre>`
 }
+renderer.link = function ({ href, title, tokens }) {
+  const rewritten = rewriteHref(href)
+  const text = this.parser.parseInline(tokens)
+  const titleAttr = title ? ` title="${title}"` : ''
+  return `<a href="${rewritten}"${titleAttr}>${text}</a>`
+}
 
 marked.use({ renderer })
 
 const html = marked(content) as string
+
+const router = useRouter()
+
+function onDocClick(e: MouseEvent) {
+  const anchor = (e.target as HTMLElement | null)?.closest('a')
+  if (!anchor) return
+  const href = anchor.getAttribute('href') || ''
+  // Only intercept in-app links we rewrote (hash-prefixed)
+  if (!href.startsWith('#/')) return
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
+  e.preventDefault()
+  router.push(href.slice(1))
+}
 </script>
 
 <style>
