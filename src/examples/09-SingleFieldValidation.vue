@@ -14,22 +14,21 @@
 
       <div class="search-row">
         <input
-          v-model="search.value"
-          @input="search.api.validate()"
+          v-model="searchValue"
           type="text"
           placeholder="Search articles…"
-          :class="{ 'is-invalid': search.value.value && !search.api.isValid.value }"
+          :class="{ 'is-invalid': searchValue && !search.isValid.value }"
         />
         <button
           class="btn btn-primary btn-sm"
-          :disabled="!search.api.isValid.value"
+          :disabled="!search.isValid.value"
           @click="onSearch"
         >
           Search
         </button>
       </div>
-      <div v-if="search.value.value && !search.api.isValid.value" class="errors">
-        <span v-for="e in search.api.errors.value" :key="e" class="err">{{ e }}</span>
+      <div v-if="searchValue && !search.isValid.value" class="errors">
+        <span v-for="e in search.errors.value" :key="e" class="err">{{ e }}</span>
       </div>
       <div v-if="searchResult" class="result">→ Searched for: <strong>{{ searchResult }}</strong></div>
     </section>
@@ -41,22 +40,21 @@
 
       <div class="search-row">
         <input
-          v-model="coupon.value"
-          @input="coupon.api.validate()"
+          v-model="couponValue"
           type="text"
           placeholder="ACME2026"
-          :class="{ 'is-invalid': coupon.value.value && !coupon.api.isValid.value }"
+          :class="{ 'is-invalid': couponValue && !coupon.isValid.value }"
         />
         <button
           class="btn btn-primary btn-sm"
-          :disabled="!coupon.api.isValid.value"
+          :disabled="!coupon.isValid.value"
           @click="onApply"
         >
           Apply
         </button>
       </div>
-      <div v-if="coupon.value.value && !coupon.api.isValid.value" class="errors">
-        <span v-for="e in coupon.api.errors.value" :key="e" class="err">{{ e }}</span>
+      <div v-if="couponValue && !coupon.isValid.value" class="errors">
+        <span v-for="e in coupon.errors.value" :key="e" class="err">{{ e }}</span>
       </div>
       <div v-if="couponApplied" class="result">→ Coupon <strong>{{ couponApplied }}</strong> applied.</div>
     </section>
@@ -64,20 +62,38 @@
     <!-- 3. URL slug -->
     <section class="card">
       <h3 class="card-title">URL slug</h3>
-      <p class="card-hint">Lowercase letters, digits, hyphens. The kind of input you'd embed inside any settings panel.</p>
+      <p class="card-hint">Pure inline feedback — no button, just a regex rule (<code>^[a-z0-9-]+$</code>) validating as you type. Try one of the samples:</p>
+
+      <div class="sample-row">
+        <button
+          v-for="sample in slugSamples"
+          :key="sample.value"
+          type="button"
+          class="sample-chip"
+          :class="{ 'sample-chip--bad': !sample.valid }"
+          @click="slugValue = sample.value"
+        >
+          {{ sample.value || '(empty)' }}
+        </button>
+      </div>
 
       <div class="slug-row">
         <span class="slug-prefix">example.com/</span>
         <input
-          v-model="slug.value"
-          @input="slug.api.validate()"
+          v-model="slugValue"
           type="text"
           placeholder="my-cool-post"
-          :class="{ 'is-invalid': slug.value.value && !slug.api.isValid.value }"
+          :class="{ 'is-invalid': slugValue && !slug.isValid.value }"
         />
       </div>
-      <div v-if="slug.value.value && !slug.api.isValid.value" class="errors">
-        <span v-for="e in slug.api.errors.value" :key="e" class="err">{{ e }}</span>
+
+      <div v-if="slugValue && !slug.isValid.value" class="errors">
+        <span v-for="e in slug.errors.value" :key="e" class="err">{{ e }}</span>
+      </div>
+
+      <div v-if="slugValue" class="slug-preview" :class="{ 'slug-preview--bad': !slug.isValid.value }">
+        <span class="slug-preview-label">{{ slug.isValid.value ? 'Resulting URL:' : 'Would be rejected:' }}</span>
+        <code>example.com/{{ slugValue }}</code>
       </div>
     </section>
 
@@ -88,22 +104,21 @@
 
       <div class="search-row">
         <input
-          v-model="emailField.value"
-          @input="emailField.api.validate()"
+          v-model="emailValue"
           type="email"
           placeholder="you@example.com"
-          :class="{ 'is-invalid': emailField.value.value && !emailField.api.isValid.value }"
+          :class="{ 'is-invalid': emailValue && !emailField.isValid.value }"
         />
         <button
           class="btn btn-primary btn-sm"
-          :disabled="!emailField.api.isValid.value"
+          :disabled="!emailField.isValid.value"
           @click="onSubscribe"
         >
           Subscribe
         </button>
       </div>
-      <div v-if="emailField.value.value && !emailField.api.isValid.value" class="errors">
-        <span v-for="e in emailField.api.errors.value" :key="e" class="err">{{ e }}</span>
+      <div v-if="emailValue && !emailField.isValid.value" class="errors">
+        <span v-for="e in emailField.errors.value" :key="e" class="err">{{ e }}</span>
       </div>
       <div v-if="subscribed" class="result">→ Subscribed: <strong>{{ subscribed }}</strong></div>
     </section>
@@ -111,13 +126,14 @@
     <details class="howto">
       <summary>How is each input wired?</summary>
 <pre><code>// search box
-const search = ref('')
-const { errors, isValid, validate } =
-  useValidation(search, [{ rule: 'min', params: { length: 3 } }])
+const searchValue = ref('')
+const search = useValidation(searchValue, [
+  { rule: 'min', params: { length: 3 } },
+])
 
 // coupon code
-const coupon = ref('')
-useValidation(coupon, [
+const couponValue = ref('')
+const coupon = useValidation(couponValue, [
   'required',
   { rule: 'min', params: { length: 6 } },
   { rule: 'max', params: { length: 10 } },
@@ -125,14 +141,14 @@ useValidation(coupon, [
 ])
 
 // slug
-const slug = ref('')
-useValidation(slug, [
+const slugValue = ref('')
+const slug = useValidation(slugValue, [
   { rule: 'regex', params: { regex: '^[a-z0-9-]+$' } },
 ])
 
 // newsletter
-const newsletter = ref('')
-useValidation(newsletter, ['required', 'email'])
+const emailValue = ref('')
+const emailField = useValidation(emailValue, ['required', 'email'])
 </code></pre>
     </details>
   </ExampleLayout>
@@ -145,49 +161,46 @@ import { useValidation } from 'oop-validator/vue'
 
 // 1 · search
 const searchValue = ref('')
-const search = {
-  value: searchValue,
-  api: useValidation(searchValue, [{ rule: 'min', params: { length: 3 } }]),
-}
+const search = useValidation(searchValue, [
+  { rule: 'min', params: { length: 3 } },
+])
 const searchResult = ref('')
 function onSearch() {
-  if (search.api.isValid.value) searchResult.value = searchValue.value
+  if (search.isValid.value) searchResult.value = searchValue.value
 }
 
 // 2 · coupon
 const couponValue = ref('')
-const coupon = {
-  value: couponValue,
-  api: useValidation(couponValue, [
-    'required',
-    { rule: 'min', params: { length: 6 }, message: 'At least 6 characters.' },
-    { rule: 'max', params: { length: 10 }, message: 'No more than 10 characters.' },
-    { rule: 'regex', params: { regex: '^[A-Z0-9]+$' }, message: 'Uppercase letters and digits only.' },
-  ]),
-}
+const coupon = useValidation(couponValue, [
+  'required',
+  { rule: 'min', params: { length: 6 }, message: 'At least 6 characters.' },
+  { rule: 'max', params: { length: 10 }, message: 'No more than 10 characters.' },
+  { rule: 'regex', params: { regex: '^[A-Z0-9]+$' }, message: 'Uppercase letters and digits only.' },
+])
 const couponApplied = ref('')
 function onApply() {
-  if (coupon.api.isValid.value) couponApplied.value = couponValue.value
+  if (coupon.isValid.value) couponApplied.value = couponValue.value
 }
 
 // 3 · slug
 const slugValue = ref('')
-const slug = {
-  value: slugValue,
-  api: useValidation(slugValue, [
-    { rule: 'regex', params: { regex: '^[a-z0-9-]+$' }, message: 'Lowercase letters, digits, hyphens only.' },
-  ]),
-}
+const slug = useValidation(slugValue, [
+  { rule: 'regex', params: { regex: '^[a-z0-9-]+$' }, message: 'Lowercase letters, digits, hyphens only.' },
+])
+const slugSamples = [
+  { value: 'my-cool-post', valid: true },
+  { value: 'hello-world-2026', valid: true },
+  { value: 'My Post', valid: false },
+  { value: 'café-au-lait', valid: false },
+  { value: 'hello_world', valid: false },
+]
 
 // 4 · newsletter
 const emailValue = ref('')
-const emailField = {
-  value: emailValue,
-  api: useValidation(emailValue, ['required', 'email']),
-}
+const emailField = useValidation(emailValue, ['required', 'email'])
 const subscribed = ref('')
 function onSubscribe() {
-  if (emailField.api.isValid.value) subscribed.value = emailValue.value
+  if (emailField.isValid.value) subscribed.value = emailValue.value
 }
 </script>
 
@@ -250,6 +263,71 @@ function onSubscribe() {
 }
 
 input.is-invalid { border-color: #e53e3e; }
+
+.sample-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.sample-chip {
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  padding: 4px 10px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #166534;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.05s;
+}
+
+.sample-chip:hover { background: #dcfce7; }
+.sample-chip:active { transform: translateY(1px); }
+
+.sample-chip--bad {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.sample-chip--bad:hover { background: #fee2e2; }
+
+.slug-preview {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slug-preview--bad {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.slug-preview-label {
+  font-weight: 600;
+  color: #475569;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.slug-preview--bad .slug-preview-label { color: #b91c1c; }
+
+.slug-preview code {
+  background: transparent;
+  font-family: 'Fira Code', monospace;
+  color: #1e293b;
+}
+
+.slug-preview--bad code { color: #991b1b; text-decoration: line-through; }
 
 .slug-prefix {
   display: inline-flex;
