@@ -3,7 +3,7 @@
     <nav class="sidebar">
       <div class="sidebar-header">
         <span class="sidebar-title">oop-validator</span>
-        <span class="sidebar-subtitle">v1.0.0 · Vue directives</span>
+        <span class="sidebar-subtitle">v1.1.2 · Vue directives</span>
       </div>
       <ul class="nav-list">
         <li><RouterLink to="/getting-started">Getting Started</RouterLink></li>
@@ -15,6 +15,9 @@
         <li><RouterLink to="/examples/messages">05 · Messages Showcase</RouterLink></li>
         <li><RouterLink to="/examples/debugger">06 · State Debugger</RouterLink></li>
         <li><RouterLink to="/examples/custom">07 · Custom Rules</RouterLink></li>
+        <li><RouterLink to="/examples/schema">08 · Schema Validation</RouterLink></li>
+        <li><RouterLink to="/examples/single-field">09 · Single-Field</RouterLink></li>
+        <li><RouterLink to="/examples/form-state-css">10 · Form-State CSS</RouterLink></li>
       </ul>
     </nav>
     <main class="main-content">

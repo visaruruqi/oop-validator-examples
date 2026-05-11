@@ -4,6 +4,21 @@ A progressive guide from zero to advanced — each concept builds on the previou
 
 ---
 
+## Which API should I use?
+
+`oop-validator` ships **four ways** to validate. Pick the one that fits your code style — they all share the same rule engine underneath, so there's no lock-in.
+
+| You need… | Use | Style | Example |
+|---|---|---|---|
+| One reactive input validated (search box, coupon, slug) | `useValidation(ref, rules)` | Imperative, no `<form>` needed | [09 · Single-Field](src/examples/09-SingleFieldValidation.vue) |
+| A whole form, rules in a config object | `useFormValidation(values, schema)` | Schema-driven, no template wiring | [08 · Schema Validation](src/examples/08-SchemaValidation.vue) |
+| A whole form, rules co-located with inputs | `useForm` + `v-*` directives | AngularJS-style, declarative markup | [01 · Contact Form](src/examples/01-ContactForm.vue) |
+| Validation outside Vue (Node, vanilla JS, React) | `ValidationEngine` / `FormValidationEngine` | Framework-agnostic core | §3 below |
+
+> **Rule of thumb:** start with `useForm` + directives for forms, drop down to `useFormValidation` when rules need to come from JSON / a backend, and use `useValidation` for one-off inputs that aren't part of a form.
+
+---
+
 ## 1. Installation
 
 ```bash
@@ -60,9 +75,89 @@ const engine = new ValidationEngine([
 ])
 ```
 
+### Stateful API
+
+`ValidationEngine` also remembers the last result — useful for inspecting state
+without re-validating, or clearing errors after a successful submit:
+
+```ts
+engine.validateValue('not-an-email')
+
+engine.getIsValid()  // false  — no re-run, just reads stored state
+engine.getErrors()   // ['This field must be a valid email address.']
+
+engine.reset()       // clears: isValid → true, errors → []
+```
+
+Use this when, e.g. the user starts typing again and you want to wipe the previous error without running validation yet.
+
 ---
 
-## 4. Form concept — useForm + v-* directives
+## 4. Single value in Vue — `useValidation`
+
+When you only have one input — a search box, a coupon code, an inline slug field —
+spinning up a whole `<form>` is overkill. `useValidation` wraps a `ref` with
+a rule list and gives you back reactive `errors` and `isValid`.
+
+```ts
+import { ref } from 'vue'
+import { useValidation } from 'oop-validator/vue'
+
+const coupon = ref('')
+const { errors, isValid, validate } = useValidation(coupon, [
+  'required',
+  { rule: 'min', params: { length: 6 } },
+  { rule: 'regex', params: { regex: '^[A-Z0-9]+$' } },
+])
+```
+
+```html
+<input v-model="coupon" @input="validate()" />
+<span v-for="e in errors" :key="e">{{ e }}</span>
+<button :disabled="!isValid">Apply</button>
+```
+
+No plugin, no `<form>` element, no directives — just rules and a value.
+
+**→ See it in action:** [09-SingleFieldValidation.vue](src/examples/09-SingleFieldValidation.vue)
+
+---
+
+## 5. Schema-driven form — `useFormValidation`
+
+If you'd rather define rules in a config object than sprinkle them across markup
+(e.g. because rules come from a backend, or your UI library's inputs don't accept
+custom directives), use `useFormValidation` directly. It returns the same field
+state you get from `useForm`, minus the directive auto-wiring.
+
+```ts
+import { reactive } from 'vue'
+import { useFormValidation } from 'oop-validator/vue'
+
+const data = reactive({ email: '', password: '' })
+
+const form = useFormValidation(data, {
+  email:    ['required', 'email'],
+  password: ['required', { rule: 'min', params: { length: 8 } }],
+})
+
+form.fields.value.email.$valid     // reactive
+form.fields.value.email.$error     // { required: true, email: false }
+form.$submit(() => save(data))     // validates, touches all, runs callback if valid
+```
+
+```html
+<input v-model="data.email" @blur="form.touch('email')" />
+<span v-if="form.fields.value.email?.$error.email">Invalid email.</span>
+```
+
+You manage the bindings yourself (`v-model`, `@blur` for touch) — but rules stay in JS.
+
+**→ See it in action:** [08-SchemaValidation.vue](src/examples/08-SchemaValidation.vue)
+
+---
+
+## 6. Form concept — useForm + v-* directives
 
 `useForm` binds a reactive data object to a `<form>` element. The `v-*` directives
 on child inputs register their rules automatically — no manual wiring.
@@ -90,7 +185,7 @@ const form = useForm('myForm', data)
 
 ---
 
-## 5. Accessing field state
+## 7. Accessing field state
 
 `useForm` returns a Proxy. Access any field directly:
 
@@ -112,7 +207,7 @@ form.$dirty.value      // true when any field has changed
 
 ---
 
-## 6. Showing error messages — v-messages + v-message
+## 8. Showing error messages — v-messages + v-message
 
 `v-messages` is a container that receives the field's `$error` map.
 `v-message` children show/hide based on which rule is failing.
@@ -137,7 +232,7 @@ Show all errors at once (default shows only first):
 
 ---
 
-## 7. CSS classes — styling validation state
+## 9. CSS classes — styling validation state
 
 Directives automatically toggle CSS classes on each input. You style them:
 
@@ -154,7 +249,7 @@ v-invalid-required   v-valid-required
 v-invalid-type       v-valid-type
 ```
 
-Full class list:
+Full class list — on each `<input>`:
 
 | Class | When |
 |---|---|
@@ -164,9 +259,28 @@ Full class list:
 | `v-pending` | async validation running |
 | `v-valid-{rule}` / `v-invalid-{rule}` | per-rule pass/fail |
 
+### Form-level classes (since v1.1.0)
+
+The `<form>` element itself gets aggregate state classes — useful for whole-form styling (e.g. dim a section while pending, show an unsaved-changes banner):
+
+| Class | When |
+|---|---|
+| `v-form-pristine` / `v-form-dirty` | no field changed / at least one field changed |
+| `v-form-touched` / `v-form-untouched` | any field blurred (or `touchAll()`) / nothing touched yet |
+| `v-form-submitted` | `$submit()` or `v-submit` has been triggered |
+| `v-form-pending` | async validation in progress on any field |
+
+```css
+form.v-form-dirty .save-button     { animation: pulse 1s infinite; }
+form.v-form-pending                { opacity: 0.6; pointer-events: none; }
+form.v-form-submitted.v-form-invalid .error-summary { display: block; }
+```
+
+**→ See it in action:** [10-FormStateCss.vue](src/examples/10-FormStateCss.vue)
+
 ---
 
-## 8. All available directives
+## 10. All available directives
 
 | Directive | Purpose | Example |
 |---|---|---|
@@ -184,7 +298,7 @@ Full class list:
 
 ---
 
-## 9. Async validation
+## 11. Async validation
 
 Pass an `asyncValidators` option to `useForm`. Validators are debounced and
 cancellable — `$pending` is `true` while they run.
@@ -209,7 +323,7 @@ const form = useForm('register', data, {
 
 ---
 
-## 10. Dynamic fields — v-if and v-for
+## 12. Dynamic fields — v-if and v-for
 
 Fields are automatically registered when their directive mounts and unregistered
 when it unmounts. This means `v-if` and `v-for` work naturally.
@@ -228,7 +342,7 @@ when it unmounts. This means `v-if` and `v-for` work naturally.
 
 ---
 
-## 11. Custom validation rules
+## 13. Custom validation rules
 
 Implement `IValidationRule` for any business-specific logic:
 
@@ -274,7 +388,7 @@ class MustMatchRule implements IValidationRule {
 
 ---
 
-## 12. Programmatic API
+## 14. Programmatic API
 
 Everything is accessible without directives if needed:
 
@@ -295,6 +409,20 @@ form.$submitted.value
 form.fields.value.email.$error
 ```
 
+### Programmatic validate (since v1.1.0)
+
+Calling `form.validate()` (or `form.$validate()`) now paints the `v-valid` / `v-invalid` classes onto inputs immediately — you no longer need to wait for a blur/focus cycle. Handy for "Save" buttons in toolbars where the form might still be untouched:
+
+```ts
+async function handleSave() {
+  const result = form.validate()
+  if (!result.isValid) return    // invalid inputs already show .v-invalid
+  await api.save(formData)
+}
+```
+
+> **Gotcha:** `validate()` does **not** mark fields as touched. If your CSS gates errors behind `.v-touched.v-invalid` (the recommended pattern), call `form.touchAll()` first, or just use `form.$submit(handleSave)` — it does both.
+
 **→ See it in action:** [06-FormStateDebugger.vue](src/examples/06-FormStateDebugger.vue)
 
 ---
@@ -302,9 +430,10 @@ form.fields.value.email.$error
 ## Summary — concept progression
 
 ```
-ValidationEngine          → single value, no framework
+ValidationEngine          → single value,    no framework
 FormValidationEngine      → multiple fields, no framework
-useFormValidation         → multiple fields, reactive Vue state
+useValidation             → single value,    reactive Vue state
+useFormValidation         → multiple fields, reactive Vue state, schema-driven
 useForm + v-* directives  → full AngularJS-style declarative forms
 custom IValidationRule    → business-specific logic
 async validators          → server-side checks with debounce

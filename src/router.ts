@@ -7,6 +7,9 @@ import NumericValidation from './examples/04-NumericValidation.vue'
 import MessagesShowcase from './examples/05-MessagesShowcase.vue'
 import FormStateDebugger from './examples/06-FormStateDebugger.vue'
 import CustomValidation from './examples/07-CustomValidation.vue'
+import SchemaValidation from './examples/08-SchemaValidation.vue'
+import SingleFieldValidation from './examples/09-SingleFieldValidation.vue'
+import FormStateCss from './examples/10-FormStateCss.vue'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -20,6 +23,9 @@ const router = createRouter({
     { path: '/examples/messages', component: MessagesShowcase },
     { path: '/examples/debugger', component: FormStateDebugger },
     { path: '/examples/custom', component: CustomValidation },
+    { path: '/examples/schema', component: SchemaValidation },
+    { path: '/examples/single-field', component: SingleFieldValidation },
+    { path: '/examples/form-state-css', component: FormStateCss },
   ]
 })
 

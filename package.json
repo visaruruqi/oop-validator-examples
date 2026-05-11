@@ -10,7 +10,7 @@
   "dependencies": {
     "highlight.js": "^11.11.1",
     "marked": "^17.0.5",
-    "oop-validator": "^1.0.0",
+    "oop-validator": "^1.1.2",
     "vue": "^3.5.0",
     "vue-router": "^4.0.0"
   },

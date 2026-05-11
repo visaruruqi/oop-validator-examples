@@ -13,7 +13,7 @@ Opens at `http://localhost:5173`.
 
 ## What's inside
 
-7 example forms, each focused on a different feature set:
+10 example pages, each focused on a different feature set:
 
 | Example | What it demonstrates |
 |---|---|
@@ -24,6 +24,9 @@ Opens at `http://localhost:5173`.
 | 05 · Messages Showcase | All `v-messages` / `v-message` patterns, single vs multiple error display, custom error text |
 | 06 · Form State Debugger | Live view of all field state (`$touched`, `$dirty`, `$valid`, `$error`, `$pending`) as you interact |
 | 07 · Custom Validation Rules | Writing `IValidationRule` classes, registering them via `useForm`, `ref()` vs `reactive()` as form data |
+| 08 · Schema Validation | `useFormValidation(values, schema)` — same form as 01, but rules live in a JS config object instead of `v-*` directives |
+| 09 · Single-Field Validation | `useValidation(ref, rules)` — standalone inputs (search, coupon, slug, newsletter) without a `<form>` |
+| 10 · Form-State CSS | The new `v-form-pristine` / `v-form-dirty` / `v-form-touched` / `v-form-submitted` / `v-form-pending` classes (v1.1.0+) — live demo showing each one lighting up as you interact |
 
 ## How it works
 
